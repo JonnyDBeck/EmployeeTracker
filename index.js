@@ -83,7 +83,7 @@ function list(){
 
         } else if (answers.menu == 'Add to Table'){
 
-            //Table view prompt
+            //Table add prompt
             inquirer.prompt([
                 {
                   type: 'list',
@@ -116,7 +116,8 @@ function list(){
             
         } else if (answers.menu == 'Update from Table'){
 
-            //Table view prompt
+            //Table update prompt
+            /*
             inquirer.prompt([
                 {
                   type: 'list',
@@ -140,7 +141,11 @@ function list(){
                     list();
                 }
             });
-            
+            */
+
+            console.info("Update functions currently unimplemented")
+            list();
+
         } else if (answers.menu == 'Quit'){
             console.info("Quitting...")
             process.exit();
@@ -218,6 +223,7 @@ function logTable(table){
 function addToTable(table){
     return new Promise((resolve, reject) => {
         if (table == 'department'){
+            //prompt(s)
             inquirer.prompt([
                 {
                     type: 'input',
@@ -226,11 +232,13 @@ function addToTable(table){
                 },
             ])
             .then(answers => {
+                //Insert Function
                 db.query(`INSERT INTO department (dpt_name) ` + 
                          `VALUES ('${answers.dpt_name}')`, 
                 function (err, results) {
                     if (err) throw err;
                     try {
+                        //lists out previous table
                         console.log(`\n${answers.dpt_name} was added to table:`)
                         logTable('department').then( res => {
                             list();
