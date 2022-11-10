@@ -1,6 +1,7 @@
 //const inquirer = require('inquirer');
 import inquirer from 'inquirer';
 import mysql from 'mysql2';
+import cTable from 'console.table';
 
 const db = mysql.createConnection(
     {
@@ -12,12 +13,6 @@ const db = mysql.createConnection(
     },
     console.log(`Connected to the employee database.\n`)
 );
-
-db.query('SELECT * FROM department', function (err, results) {
-    if (err) throw err;
-    console.log("\n")
-    console.log(results);
-});
 
 start();
 
@@ -47,7 +42,7 @@ function list(){
         {
           type: 'list',
           name: 'menu',
-          message: 'Please Select an Option',
+          message: 'Please Select an Option\n',
           choices: ['Veiw Table', 'Add to Table', 'Update from Table', 'Quit'],
           loop: true
         },
@@ -60,17 +55,23 @@ function list(){
                 {
                   type: 'list',
                   name: 'vMenu',
-                  message: 'Which table would you like to view?',
+                  message: 'Which table would you like to view?\n',
                   choices: ['Veiw Department Table', 'Veiw Role Table', 'Veiw Employee Table', 'Back'],
                   loop: true
                 },
             ]).then(answers => {
                 if (answers.vMenu == 'Veiw Department Table'){
-
+                    logTable('department').then( res => {
+                        list();
+                    });
                 } else if (answers.vMenu == 'Veiw Role Table'){
-
+                    logTable('emp_role').then( res => {
+                        list();
+                    });
                 } else if (answers.vMenu == 'Veiw Employee Table'){
-
+                    logTable('employee').then( res => {
+                        list();
+                    });
                 } else if (answers.vMenu == 'Back'){
                     list();
                 } else {
@@ -87,13 +88,13 @@ function list(){
                 {
                   type: 'list',
                   name: 'aMenu',
-                  message: 'Which table would you like to view?',
+                  message: 'Which table would you like to add to?\n',
                   choices: ['Add to Department Table', 'Add to Role Table', 'Add to Employee Table', 'Back'],
                   loop: true
                 },
             ]).then(answers => {
                 if (answers.aMenu == 'Add to Department Table'){
-
+                    
                 } else if (answers.aMenu == 'Add to Role Table'){
 
                 } else if (answers.aMenu == 'Add to Employee Table'){
@@ -114,7 +115,7 @@ function list(){
                 {
                   type: 'list',
                   name: 'uMenu',
-                  message: 'Which table would you like to view?',
+                  message: 'Which table would you like to update?\n',
                   choices: ['Update Department Table', 'Update Role Table', 'Update Employee Table', 'Back'],
                   loop: true
                 },
@@ -136,10 +137,74 @@ function list(){
             
         } else if (answers.menu == 'Quit'){
             console.info("Quitting...")
+            process.exit();
         } else {
             //Just in case
             console.error("An unknown error has occured")
             list();
         }
+    });
+}
+
+//prints out the table of choice
+function logTable(table){ 
+    return new Promise((resolve, reject) => {
+        if (table == 'department'){
+            db.query('SELECT department.id, department.dpt_name AS department ' +
+                     'FROM department', 
+                function (err, results) {
+                if (err) throw err;
+                try {
+                    //empty console logs are there for spacecing so that it is more visually appealing
+                    console.log("");    
+                    console.table("Departments", results);
+                    console.log(""); 
+                    resolve(); 
+                } catch (error) {
+                    //this is more for me if i forget to initialize my SQL correctly
+                    console.error("SQL Table 'department' does not exist")
+                }
+            });
+        } else if (table == 'emp_role'){
+            db.query('SELECT emp_role.id, emp_role.title, department.dpt_name AS department, emp_role.salary ' +
+                     'FROM emp_role ' +
+                     'LEFT JOIN department ' +
+                     'ON emp_role.department_id = department.id', 
+            function (err, results) {
+                if (err) throw err;
+                try {
+                    console.log("");    
+                    console.table("Roles", results);
+                    console.log(""); 
+                    resolve(); 
+                } catch (error) {
+                    console.error("SQL Table 'emp_role' does not exist")
+                }
+            });
+        } else if (table == 'employee'){
+            db.query('SELECT employee.id, employee.first_name, employee.last_name, emp_role.title, ' +
+                     'department.dpt_name AS department, emp_role.salary, CONCAT(E.first_name, " ", E.last_name) AS manager ' +
+                     'FROM employee ' +
+                     'LEFT JOIN emp_role ' +
+                     'ON employee.role_id = emp_role.id ' +
+                     'LEFT JOIN department ' +
+                     'ON emp_role.department_id = department.id ' +
+                     'LEFT JOIN employee E ' +
+                     'ON E.manager_id = employee.id ', 
+            function (err, results) {
+                if (err) throw err;
+                try {
+                    console.log("");    
+                    console.table("Employees", results);
+                    console.log(""); 
+                    resolve(); 
+                } catch (error) {
+                    console.error("SQL Table 'emp_role' does not exist")
+                }
+            });
+        } else {
+            console.error("There was an unknown error")
+        }
+
     });
 }
