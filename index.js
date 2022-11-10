@@ -1,5 +1,23 @@
 //const inquirer = require('inquirer');
 import inquirer from 'inquirer';
+import mysql from 'mysql2';
+
+const db = mysql.createConnection(
+    {
+      host: 'localhost',
+      user: 'root',
+      //Password removed for privacy reasons
+      password: 'password',
+      database: 'employee_db'
+    },
+    console.log(`Connected to the employee database.\n`)
+);
+
+db.query('SELECT * FROM department', function (err, results) {
+    if (err) throw err;
+    console.log("\n")
+    console.log(results);
+});
 
 start();
 
