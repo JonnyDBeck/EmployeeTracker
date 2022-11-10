@@ -94,11 +94,17 @@ function list(){
                 },
             ]).then(answers => {
                 if (answers.aMenu == 'Add to Department Table'){
-                    
+                    addToTable('department').then( res => {
+                        list();
+                    });
                 } else if (answers.aMenu == 'Add to Role Table'){
-
+                    addToTable('emp_role').then( res => {
+                        list();
+                    });
                 } else if (answers.aMenu == 'Add to Employee Table'){
-
+                    addToTable('employee').then( res => {
+                        list();
+                    });
                 } else if (answers.aMenu == 'Back'){
                     list();
                 } else {
@@ -190,7 +196,7 @@ function logTable(table){
                      'LEFT JOIN department ' +
                      'ON emp_role.department_id = department.id ' +
                      'LEFT JOIN employee E ' +
-                     'ON E.manager_id = employee.id ', 
+                     'ON employee.manager_id = E.id ', 
             function (err, results) {
                 if (err) throw err;
                 try {
@@ -206,5 +212,107 @@ function logTable(table){
             console.error("There was an unknown error")
         }
 
+    });
+}
+
+function addToTable(table){
+    return new Promise((resolve, reject) => {
+        if (table == 'department'){
+            inquirer.prompt([
+                {
+                    type: 'input',
+                    name: 'dpt_name',
+                    message: 'Enter a new department name (Limit 30 Charcaters)'
+                },
+            ])
+            .then(answers => {
+                db.query(`INSERT INTO department (dpt_name) ` + 
+                         `VALUES ('${answers.dpt_name}')`, 
+                function (err, results) {
+                    if (err) throw err;
+                    try {
+                        console.log(`\n${answers.dpt_name} was added to table:`)
+                        logTable('department').then( res => {
+                            list();
+                        });
+                    } catch (error) {
+                        console.error(error)
+                    }
+                });
+            });
+        } else if (table == 'emp_role'){
+            inquirer.prompt([
+                {
+                    type: 'input',
+                    name: 'title',
+                    message: 'Enter a new role title (Limit 30 Charcaters)'
+                },
+                {
+                    type: 'number',
+                    name: 'department',
+                    message: 'Enter the department id (Integer or NULL)'
+                },
+                {
+                    type: 'number',
+                    name: 'salary',
+                    message: 'Enter the salary (Can be Decimal)'
+                },
+            ])
+            .then(answers => {
+                db.query(`INSERT INTO emp_role (title, department_id, salary) ` + 
+                         `VALUES ('${answers.title}', '${answers.department}', '${answers.salary}')`, 
+                function (err, results) {
+                    if (err) throw err;
+                    try {
+                        console.log(`\n${answers.title} was added to table:`)
+                        logTable('emp_role').then( res => {
+                            list();
+                        });
+                    } catch (error) {
+                        console.error(error)
+                    }
+                });
+            });
+        } else if (table == 'employee'){
+            inquirer.prompt([
+                {
+                    type: 'input',
+                    name: 'first_name',
+                    message: `Enter the new employee's first name (Limit 30 Charcaters)`
+                },
+                {
+                    type: 'input',
+                    name: 'last_name',
+                    message: `Enter the new employee's last name (Limit 30 Charcaters)`
+                },
+                {
+                    type: 'number',
+                    name: 'role_id',
+                    message: 'Enter their role id (Integer or NULL)'
+                },
+                {
+                    type: 'number',
+                    name: 'manager_id',
+                    message: 'Enter their manager id (Integer or NULL)'
+                },
+            ])
+            .then(answers => {
+                db.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) ` + 
+                         `VALUES ('${answers.first_name}', '${answers.last_name}', '${answers.role_id}', '${answers.manager_id}')`, 
+                function (err, results) {
+                    if (err) throw err;
+                    try {
+                        console.log(`\n${answers.first_name} ${answers.last_name} was added to table:`)
+                        logTable('employee').then( res => {
+                            list();
+                        });
+                    } catch (error) {
+                        console.error(error)
+                    }
+                });
+            });
+        } else {
+            console.error("There was an unknown error")
+        }
     });
 }
